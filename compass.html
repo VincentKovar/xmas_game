@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Compass Setup</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 2em;
+    }
+    #message {
+      margin-bottom: 1em;
+      font-size: 1.2em;
+    }
+    button {
+      padding: 1em 2em;
+      font-size: 1em;
+      border: none;
+      border-radius: 8px;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Compass Setup</h1>
+  <div id="message">Detecting your device…</div>
+  <button id="compassButton" style="display:none;"></button>
+
+  <script>
+    const message = document.getElementById("message");
+    const button = document.getElementById("compassButton");
+
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    const isAndroid = /android/i.test(userAgent);
+    const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+
+    if (isAndroid) {
+      message.textContent = "You're on Android. Use a compass app to orient yourself.";
+      button.textContent = "Open Compass App";
+      button.style.display = "inline-block";
+      button.onclick = () => {
+        window.location.href = "https://play.google.com/store/apps/details?id=com.gabenative.compass";
+      };
+    } else if (isIOS) {
+      message.textContent = "You're on iOS. Use the built-in Compass app.";
+      button.textContent = "Open Compass App";
+      button.style.display = "inline-block";
+      button.onclick = () => {
+        window.location.href = "compass://"; // May not work in all browsers
+      };
+    } else {
+      message.textContent = "Device not recognized. Please use a compass app manually.";
+    }
+  </script>
+
+</body>
+</html>
