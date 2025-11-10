@@ -55,11 +55,11 @@
         alert("Swipe down on your home screen and search for 'Compass'. It's a built-in app on iPhones.");
       };
     } else if (isAndroid) {
-      message.textContent = "You're on Android. Use your installed compass app or install one below.";
+      message.textContent = "You're on Android. Open your installed compass app or install MixxApps Compass below.";
       button.textContent = "Install MixxApps Compass";
       button.style.display = "inline-block";
       button.onclick = () => {
-        window.location.href = "https://play.google.com/store/apps/details?id=com.mindxapps.digital.compass";
+        window.location.href = "https://play.google.com/store/apps/details?id=com.dek.compass";
       };
     } else {
       message.textContent = "Device not recognized. Please open a compass app manually.";
