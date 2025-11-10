@@ -42,22 +42,22 @@
     const isAndroid = /android/i.test(userAgent);
     const isIOS = /iPad|iPhone|iPod/.test(userAgent);
 
-    if (isAndroid) {
-      message.textContent = "You're on Android. Use a compass app to orient yourself.";
-      button.textContent = "Open Compass App";
+    if (isIOS) {
+      message.textContent = "You're on iOS. Please open the built-in Compass app manually.";
+      button.textContent = "How to Find It";
       button.style.display = "inline-block";
       button.onclick = () => {
-        window.location.href = "https://play.google.com/store/apps/details?id=com.gabenative.compass";
+        alert("Swipe down on your home screen and search for 'Compass'. It's a built-in app on iPhones.");
       };
-    } else if (isIOS) {
-      message.textContent = "You're on iOS. Use the built-in Compass app.";
-      button.textContent = "Open Compass App";
+    } else if (isAndroid) {
+      message.textContent = "You're on Android. Use your installed compass app or install one below.";
+      button.textContent = "Install MixxApps Compass";
       button.style.display = "inline-block";
       button.onclick = () => {
-        window.location.href = "compass://"; // May not work in all browsers
+        window.location.href = "https://play.google.com/store/apps/details?id=com.mindxapps.digital.compass";
       };
     } else {
-      message.textContent = "Device not recognized. Please use a compass app manually.";
+      message.textContent = "Device not recognized. Please open a compass app manually.";
     }
   </script>
 
