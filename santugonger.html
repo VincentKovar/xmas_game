@@ -1,0 +1,102 @@
+<script>
+    // ----------------------------------------------------------------------
+    // 1. CONFIGURATION (Only change these values)
+    // ----------------------------------------------------------------------
+    const TARGET_LATITUDE = 47.75179519362989; // Latitude of the Three Rabbits Statue
+    const TARGET_LONGITUDE = -122.1589123074805; // Longitude of the Three Rabbits Statue
+    
+    // Set the trigger radius to 4.5 meters (~15 feet)
+    const TRIGGER_RADIUS_M = 4.5;
+
+    // We only trigger if the device is confident (reported accuracy is low).
+    // The device must report an accuracy better than 9 meters (30 feet).
+    const REQUIRED_MAX_ACCURACY_M = 9; 
+
+    // ----------------------------------------------------------------------
+    // 2. HAversine Formula (Do Not Change)
+    // ----------------------------------------------------------------------
+    function getDistanceInMeters(lat1, lon1, lat2, lon2) {
+        const R = 6371e3; // Earth's radius in meters
+        const φ1 = lat1 * Math.PI/180;
+        const φ2 = lat2 * Math.PI/180;
+        const Δφ = (lat2 - lat1) * Math.PI/180;
+        const Δλ = (lon2 - lon1) * Math.PI/180;
+
+        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                  Math.cos(φ1) * Math.cos(φ2) *
+                  Math.sin(Δλ/2) * Math.sin(Δλ/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+        return R * c; // Distance in meters
+    }
+
+    // ----------------------------------------------------------------------
+    // 3. MAIN LOGIC AND CHECK (Do Not Change)
+    // ----------------------------------------------------------------------
+    let watchId;
+    let isTriggered = false;
+    const puzzleOutput = document.getElementById('puzzle-output'); // Assuming you have an element with this ID
+
+    function checkProximity(position) {
+        if (isTriggered) return; // Stop processing once the clue is revealed
+
+        const playerLat = position.coords.latitude;
+        const playerLon = position.coords.longitude;
+        const reportedAccuracyM = position.coords.accuracy;
+
+        const distanceM = getDistanceInMeters(
+            playerLat, playerLon, TARGET_LATITUDE, TARGET_LONGITUDE
+        );
+
+        // **THE DUAL-CHECK FOR TIGHT GEOLOCATION**
+        const isCloseEnough = distanceM <= TRIGGER_RADIUS_M;
+        const isAccurateEnough = reportedAccuracyM <= REQUIRED_MAX_ACCURACY_M;
+
+        if (isCloseEnough && isAccurateEnough) {
+            // Success: Player is within the 15ft radius AND the phone is sure of its location.
+            isTriggered = true;
+            navigator.geolocation.clearWatch(watchId); // Stop tracking to save battery
+
+            puzzleOutput.innerHTML = "<h2>Clue Revealed: The Three Hares dance for joy!</h2><p>The next clue is hidden on the middle rabbit's left foot. Look closely at the base.</p>";
+            puzzleOutput.style.color = 'green';
+
+        } else if (isCloseEnough) {
+            // Player is close, but GPS signal is still shaky (e.g., inside a car, under dense cover)
+            puzzleOutput.innerHTML = `<p>Warm! You are very close (${distanceM.toFixed(1)}m), but we can't lock your exact position yet (Accuracy: ${reportedAccuracyM.toFixed(1)}m). Step out and ensure a clear view of the sky!</p>`;
+            puzzleOutput.style.color = 'orange';
+
+        } else {
+            // Cold/Warm Messaging (Distance check failed)
+            let message;
+            if (distanceM > 300) {
+                message = "Cold. You are far away. Check your map!";
+            } else if (distanceM > 30) {
+                message = `Warming up. You are ${distanceM.toFixed(0)} meters away.`;
+            } else {
+                 message = `Hot! You are within 30 meters. Look for the Three Hares sign!`;
+            }
+            puzzleOutput.innerHTML = `<p>${message}</p><p style="font-size: 0.8em; color: gray;">GPS Accuracy: ${reportedAccuracyM.toFixed(1)}m</p>`;
+            puzzleOutput.style.color = 'red';
+        }
+    }
+
+    function error(err) {
+        console.warn(`ERROR(${err.code}): ${err.message}`);
+        puzzleOutput.innerHTML = `<p>Error: Could not determine location. Please ensure Location Services are enabled for your browser.</p>`;
+    }
+
+    // Initiate the continuous check when the page loads
+    if (navigator.geolocation) {
+        const options = {
+            enableHighAccuracy: true, // Crucial for using GPS
+            timeout: 20000,           // Give up to 20 seconds for a good fix
+            maximumAge: 0             // Always get a fresh position
+        };
+        // Use watchPosition for continuous updating
+        watchId = navigator.geolocation.watchPosition(checkProximity, error, options);
+    } else {
+        puzzleOutput.innerHTML = "<p>Geolocation is not supported by this browser.</p>";
+    }
+</script>
+
+<div id="puzzle-output">Waiting for your location...</div>
