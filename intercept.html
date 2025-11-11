@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intercept: Hidden Signal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Tone.js for audio generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap');
+        body {
+            font-family: 'Orbitron', monospace;
+            background-color: #0d1117;
+            color: #c9d1d9;
+        }
+        #spectrogram {
+            filter: drop-shadow(0 0 8px rgba(0, 255, 127, 0.6));
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4">
+
+    <div class="w-full max-w-lg bg-gray-900 p-6 rounded-xl shadow-2xl border border-green-700">
+        
+        <h1 class="text-3xl font-bold text-center text-red-500 mb-2">
+            WARNING: CLASSIFIED INTERCEPT
+        </h1>
+        <p class="text-center text-sm mb-6 text-gray-500">Signal is heavily degraded. Use visual analysis if audio fails.</p>
+
+        <!-- Audio Player & Visualizer Section -->
+        <div class="flex flex-col items-center space-y-4 mb-8">
+            <button id="playButton" class="px-6 py-3 bg-red-700 hover:bg-red-600 text-white font-bold rounded-lg shadow-lg transition duration-200 uppercase tracking-widest flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Activate Receiver
+            </button>
+            <p id="status" class="text-sm text-green-400"></p>
+        </div>
+
+        <!-- Spectrogram Hint (Crucial for the observational solvers) -->
+        <div class="mt-6">
+            <h2 class="text-xl text-green-400 mb-2 border-b border-gray-700 pb-1">Spectral Signature Analysis</h2>
+            <img id="spectrogram" class="w-full h-auto rounded-lg" 
+                 src="https://placehold.co/500x150/000000/00ff7f?text=Visual+Hint+Embedded+Here" 
+                 alt="Spectrogram showing noise and a hidden signal pattern"
+                 title="The hidden signal pattern is visible in the frequency bands.">
+            <p class="text-xs text-gray-500 mt-2">Analysis shows clear signal bursts in the upper-mid frequencies.</p>
+        </div>
+
+        <!-- Password Input -->
+        <div class="mt-8">
+            <label for="passwordInput" class="block text-md font-medium text-red-400 mb-2">Decoded Signal (Password):</label>
+            <input type="text" id="passwordInput" class="w-full p-3 bg-gray-700 border border-red-500 rounded-lg text-white placeholder-gray-400 focus:ring-red-500 focus:border-red-500 uppercase tracking-widest" placeholder="ENTER ANSWER HERE">
+            
+            <button id="submitButton" class="mt-4 w-full px-4 py-2 bg-green-700 hover:bg-green-600 rounded-lg font-bold transition duration-200">
+                Transmit Decryption
+            </button>
+            
+            <div id="messageBox" class="mt-4 p-3 rounded-lg text-center font-bold hidden"></div>
+        </div>
+
+    </div>
+
+    <script>
+        const PLAY_BUTTON = document.getElementById('playButton');
+        const STATUS_TEXT = document.getElementById('status');
+        const PASSWORD_INPUT = document.getElementById('passwordInput');
+        const SUBMIT_BUTTON = document.getElementById('submitButton');
+        const MESSAGE_BOX = document.getElementById('messageBox');
+        
+        // --- CONFIGURATION ---
+        const MORSE_CODE_SEQUENCE = '... - .--'; // S N O
+        const CORRECT_PASSWORD = 'SNO'; // The decoded answer
+        const DOT_DURATION = 0.1; // seconds
+        const DASH_DURATION = DOT_DURATION * 3;
+        const FREQUENCY = 800; // Hz (A distinct, easy-to-hear frequency)
+        const AUDIO_DURATION = 5; // Total duration of the simulated broadcast
+
+        // Tone.js Components
+        let morseSynth;
+        let noiseSynth;
+
+        /**
+         * Converts the simple morse string into a playable Tone.js sequence.
+         * @returns {Array<string>} Array of timing commands for Tone.js
+         */
+        function generateMorseSequence() {
+            const sequence = [];
+            const parts = MORSE_CODE_SEQUENCE.split(' ');
+            
+            for (let i = 0; i < parts.length; i++) {
+                const letter = parts[i];
+                for (let j = 0; j < letter.length; j++) {
+                    const symbol = letter[j];
+                    const duration = symbol === '.' ? DOT_DURATION : DASH_DURATION;
+                    
+                    // Start tone
+                    sequence.push(["start", `+${(i * (DASH_DURATION * 4)) + (j * DASH_DURATION)}`, duration]);
+                    
+                    // Stop tone (automatically handled by the sequence structure)
+                }
+            }
+            return sequence;
+        }
+
+        /**
+         * Initializes and starts the audio components.
+         */
+        function startBroadcast() {
+            // 1. Noise Generator (The "Static")
+            noiseSynth = new Tone.Noise("white").toDestination();
+            noiseSynth.volume.value = -10; // Low volume, subtle static
+
+            // 2. Morse Code Signal (The "Broadcast")
+            morseSynth = new Tone.Synth({
+                oscillator: { type: "sine" },
+                envelope: { attack: 0.001, release: 0.05 }
+            }).toDestination();
+            morseSynth.volume.value = -10; // Mix volume with static
+
+            // 3. Scheduling the Sequence
+            const sequence = generateMorseSequence();
+            let currentTime = 0;
+
+            // Start Noise and Tone at the same time
+            noiseSynth.start(Tone.now());
+
+            // Schedule the morse code bursts over the duration
+            for (let i = 0; i < sequence.length; i++) {
+                const [action, timeOffset, duration] = sequence[i];
+                
+                // Add the tone burst
+                morseSynth.triggerAttackRelease(FREQUENCY, duration, Tone.now() + currentTime);
+                
+                // Advance time by the duration + a small pause
+                currentTime += duration + DOT_DURATION;
+            }
+
+            // Stop everything after the total audio duration
+            const totalDuration = currentTime + 1; // 1 second buffer
+            noiseSynth.stop(Tone.now() + totalDuration);
+            
+            // UI Feedback
+            STATUS_TEXT.textContent = 'TRANSMITTING...';
+            PLAY_BUTTON.disabled = true;
+            
+            // Re-enable button
+            setTimeout(() => {
+                STATUS_TEXT.textContent = 'READY FOR REPLAY.';
+                PLAY_BUTTON.disabled = false;
+            }, totalDuration * 1000);
+        }
+
+        // --- PUZZLE CHECKER ---
+
+        function checkPassword() {
+            const input = PASSWORD_INPUT.value.trim().toUpperCase();
+            
+            if (input === CORRECT_PASSWORD) {
+                displayMessage('ACCESS GRANTED. NEXT TARGET: [INSERT NEXT CLUE LOCATION HERE]', 'bg-green-700');
+            } else {
+                displayMessage('DECRYPTION FAILED. SIGNAL AMBIGUOUS.', 'bg-red-700');
+                PASSWORD_INPUT.value = ''; // Clear input on failure
+            }
+        }
+
+        function displayMessage(text, colorClass) {
+            MESSAGE_BOX.textContent = text;
+            MESSAGE_BOX.className = `mt-4 p-3 rounded-lg text-center font-bold ${colorClass}`;
+            MESSAGE_BOX.style.display = 'block';
+        }
+
+        // --- EVENT LISTENERS ---
+        
+        // Ensure Tone.js is ready before playing (required for mobile)
+        PLAY_BUTTON.addEventListener('click', async () => {
+            await Tone.start();
+            startBroadcast();
+        });
+
+        SUBMIT_BUTTON.addEventListener('click', checkPassword);
+        PASSWORD_INPUT.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                checkPassword();
+            }
+        });
+
+    </script>
+
+</body>
+</html>
