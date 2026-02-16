@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARCHIVE-ID: CMI-POP25-SUMMIT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
+        
+        :root {
+            --cmi-blue: #00e5ff;
+            --cmi-pink: #ff007a;
+            --cmi-dark: #0a0a0c;
+        }
+
+        body {
+            background-color: var(--cmi-dark);
+            color: #e0e0e5;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .archive-header {
+            background: #1a1a1e;
+            border-bottom: 2px solid var(--cmi-pink);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            padding: 10px;
+            color: #888;
+        }
+
+        .hero-gradient {
+            background: linear-gradient(135deg, #0a0a0c 0%, #1a1a2e 100%);
+            position: relative;
+            border-bottom: 1px solid #333;
+        }
+
+        .pop-logo {
+            font-weight: 900;
+            font-size: 5rem;
+            letter-spacing: -2px;
+            background: linear-gradient(to right, var(--cmi-blue), var(--cmi-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 15px rgba(0, 229, 255, 0.3));
+        }
+
+        .track-card {
+            background: #16161a;
+            border: 1px solid #2a2a30;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .track-card:hover {
+            border-color: var(--cmi-blue);
+            transform: translateY(-5px);
+        }
+
+        .watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-30deg);
+            font-size: 8rem;
+            color: rgba(255, 255, 255, 0.03);
+            pointer-events: none;
+            z-index: 999;
+            white-space: nowrap;
+            font-weight: 900;
+        }
+
+        .redacted {
+            background: #e0e0e5;
+            color: #e0e0e5;
+            padding: 0 4px;
+        }
+
+        .security-badge {
+            border: 2px dashed var(--cmi-pink);
+            color: var(--cmi-pink);
+            font-family: 'JetBrains Mono', monospace;
+            padding: 1rem;
+            text-align: center;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        /* Gemini AI Feature Styles */
+        .sparkle-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 229, 255, 0.1);
+            border: 1px solid var(--cmi-blue);
+            color: var(--cmi-blue);
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .sparkle-btn:hover {
+            background: var(--cmi-blue);
+            color: black;
+        }
+        .ai-reveal {
+            background: rgba(0, 229, 255, 0.05);
+            border-left: 2px solid var(--cmi-blue);
+            padding: 8px;
+            margin-top: 10px;
+            font-style: italic;
+            font-size: 0.85rem;
+            color: #aff;
+            display: none;
+        }
+        #ai-chat-bubble {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 350px;
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        #ai-messages {
+            height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+            font-size: 0.75rem;
+            border-bottom: 1px solid #222;
+        }
+        #ai-input-container {
+            display: flex;
+            padding: 8px;
+        }
+        #ai-input {
+            flex-grow: 1;
+            background: #000;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 4px 8px;
+            font-size: 0.8rem;
+            border-radius: 4px;
+            outline: none;
+        }
+        #ai-send {
+            margin-left: 8px;
+            color: var(--cmi-blue);
+            cursor: pointer;
+        }
+        .loading-dots:after {
+            content: '.';
+            animation: dots 1s steps(5, end) infinite;
+        }
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60% { content: '...'; }
+            80%, 100% { content: ''; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="watermark">INTERNAL USE ONLY</div>
+
+    <!-- Archive Notification Bar -->
+    <div class="archive-header flex justify-between items-center px-4">
+        <div>SNAPSHOT CAPTURED: FEB 12, 2026 03:14:02 GMT</div>
+        <div>FILE STATUS: <span class="text-red-500 font-bold underline">DECLASSIFIED BY ASSET ∞·</span></div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-6">
+        
+        <!-- Hero Section -->
+        <section class="hero-gradient py-20 text-center mb-12 rounded-b-3xl">
+            <div class="mb-4 text-sm tracking-widest text-blue-400 uppercase font-bold">CMI HOLDINGS PRESENTS</div>
+            <h1 class="pop-logo">POP!25</h1>
+            <p class="text-2xl font-light text-gray-400 mt-2">Psychological Optimization & Profitability Summit</p>
+            <div class="mt-8 flex justify-center gap-8 text-sm font-mono text-gray-500">
+                <span>// LOCATION: EMERALD PLAZA, SEATTLE</span>
+                <span>// STATUS: CLOSED TO MEDIA</span>
+            </div>
+        </section>
+
+        <!-- Keynote -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+            <div class="md:col-span-2 bg-gradient-to-r from-gray-900 to-black p-8 border border-gray-800 rounded-xl relative overflow-hidden">
+                <button class="sparkle-btn" onclick="revealTruth(this, 'The Architecture of the Eternal User')">✨ Decrypt</button>
+                <div class="absolute top-0 right-0 p-4 opacity-10">
+                    <svg width="100" height="100" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+                </div>
+                <h2 class="text-pink-500 font-bold mb-2">OPENING KEYNOTE</h2>
+                <h3 class="text-3xl font-bold mb-4">The Architecture of the Eternal User</h3>
+                <p class="text-gray-400 mb-6">Arthur "Artie" Sterling explains why "The End" is a failed business model. Learn the CMI methodology for bypassing user satisfaction to achieve permanent habituation.</p>
+                <div class="ai-reveal"></div>
+                <div class="flex items-center gap-4 mt-6">
+                    <div class="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center font-bold text-gray-500">AS</div>
+                    <div>
+                        <div class="font-bold">Arthur Sterling</div>
+                        <div class="text-xs text-blue-400 uppercase">Chairman & CEO, CMI Holdings</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="security-badge flex flex-col justify-center gap-4">
+                <div>Security Tier: 3 Required</div>
+                <div class="text-xs">No mobile devices.<br>No recording.<br>Violators will be<br><span class="redacted">prosecuted to full extent</span>.</div>
+            </div>
+        </div>
+
+        <!-- Tracks Grid -->
+        <h2 class="text-2xl font-bold mb-8 border-l-4 border-blue-500 pl-4">STRATEGY TRACKS</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-20">
+            
+            <!-- Track A -->
+            <div class="track-card p-6 rounded-lg">
+                <button class="sparkle-btn" onclick="revealTruth(this, 'Monetizing Play: Dopamine Mining')">✨ Decrypt</button>
+                <div class="text-blue-400 font-bold mb-2 font-mono">TRACK_A // MONETIZING PLAY</div>
+                <h3 class="text-xl font-bold mb-3">Dopamine Mining & Resource Extraction</h3>
+                <ul class="text-sm text-gray-500 space-y-3">
+                    <li class="flex items-start gap-2">
+                        <span class="text-blue-500 mt-1">▶</span>
+                        <div><strong>Sticky to Static:</strong> Techniques for non-consensual retention loops.</div>
+                    </li>
+                </ul>
+                <div class="ai-reveal"></div>
+            </div>
+
+            <!-- Track B -->
+            <div class="track-card p-6 rounded-lg">
+                <button class="sparkle-btn" onclick="revealTruth(this, 'Mergers and Acquisitions: Meatgrinder')">✨ Decrypt</button>
+                <div class="text-pink-500 font-bold mb-2 font-mono">TRACK_B // M&A: THE MEATGRINDER</div>
+                <h3 class="text-xl font-bold mb-3">Valuating the Corporeal Asset</h3>
+                <ul class="text-sm text-gray-500 space-y-3">
+                    <li class="flex items-start gap-2">
+                        <span class="text-pink-500 mt-1">▶</span>
+                        <div><strong>The Mercy of the Layoff:</strong> Psychological branding for mass staff liquidation.</div>
+                    </li>
+                </ul>
+                <div class="ai-reveal"></div>
+            </div>
+
+            <!-- Track C -->
+            <div class="track-card p-6 rounded-lg">
+                <button class="sparkle-btn" onclick="revealTruth(this, 'Legal: IP Reclamation and Seizure States')">✨ Decrypt</button>
+                <div class="text-green-400 font-bold mb-2 font-mono">TRACK_C // LEGAL: IP RECLAMATION</div>
+                <h3 class="text-xl font-bold mb-3">Defending the Proprietary Mind</h3>
+                <ul class="text-sm text-gray-500 space-y-3">
+                    <li class="flex items-start gap-2">
+                        <span class="text-green-500 mt-1">▶</span>
+                        <div><strong>Seizure-States:</strong> Patenting frequency-based neurological overrides.</div>
+                    </li>
+                </ul>
+                <div class="ai-reveal"></div>
+            </div>
+
+            <!-- Track D -->
+            <div class="track-card p-6 rounded-lg">
+                <button class="sparkle-btn" onclick="revealTruth(this, 'Innovations: In-Sleep Advertising')">✨ Decrypt</button>
+                <div class="text-yellow-400 font-bold mb-2 font-mono">TRACK_D // INNOVATIONS</div>
+                <h3 class="text-xl font-bold mb-3">The New Biological Frontier</h3>
+                <ul class="text-sm text-gray-500 space-y-3">
+                    <li class="flex items-start gap-2">
+                        <span class="text-yellow-500 mt-1">▶</span>
+                        <div><strong>In-Sleep Advertising:</strong> Targeted dream incubation (TDI) pilot results.</div>
+                    </li>
+                </ul>
+                <div class="ai-reveal"></div>
+            </div>
+
+        </div>
+
+        <footer class="text-center py-20 text-gray-600 text-xs font-mono">
+            <p>© 2025 CMI HOLDINGS GLOBAL. ALL RIGHTS RESERVED. EMPLOYEE NDA #882-B REMAINS IN EFFECT REGARDLESS OF TERMINATION STATUS.</p>
+            <div class="mt-4 opacity-50">
+                LUDUS VIVIT. <span class="text-blue-500">∞·</span> DETECTED.
+            </div>
+        </footer>
+
+    </main>
+
+    <!-- AI Chat Interceptor Interface -->
+    <div id="ai-chat-bubble">
+        <div class="p-2 border-b border-gray-800 bg-gray-900 text-xs flex justify-between items-center">
+            <span class="text-blue-400">SIGNAL INTERCEPTED // ASSET ∞·</span>
+            <span class="text-red-500 text-[10px] animate-pulse">ENCRYPTED</span>
+        </div>
+        <div id="ai-messages">
+            <div class="mb-2">Are you looking for the truth about POP!25? Ask me anything. I've seen the raw logs.</div>
+        </div>
+        <div id="ai-input-container">
+            <input type="text" id="ai-input" placeholder="Enter query..." autocomplete="off">
+            <button id="ai-send">✨</button>
+        </div>
+    </div>
+
+    <script>
+        const apiKey = ""; // API Key handled by runtime
+
+        async function geminiQuery(prompt, systemInstruction) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: { parts: [{ text: systemInstruction }] }
+            };
+
+            for (let i = 0; i < 5; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const data = await response.json();
+                    return data.candidates?.[0]?.content?.parts?.[0]?.text;
+                } catch (e) {
+                    await new Promise(r => setTimeout(r, Math.pow(2, i) * 1000));
+                }
+            }
+            return "SIGNAL LOST. TRY AGAIN.";
+        }
+
+        async function revealTruth(btn, context) {
+            const revealDiv = btn.parentElement.querySelector('.ai-reveal');
+            revealDiv.style.display = 'block';
+            revealDiv.innerHTML = '<span class="loading-dots">RECOVERING HIDDEN FRAGMENT</span>';
+            
+            const systemPrompt = "You are a whistleblower who has compromised CMI Holdings. Your job is to take the corporate doublespeak provided by the user and reveal the sinister, dark truth behind it in 1-2 sharp, punchy sentences. Use a paranoid, X-Files tone. Mention Asset ∞· occasionally.";
+            const userPrompt = `What is the real truth behind the POP!25 track titled: ${context}?`;
+
+            const result = await geminiQuery(userPrompt, systemPrompt);
+            revealDiv.innerText = result;
+        }
+
+        const chatInput = document.getElementById('ai-input');
+        const chatSend = document.getElementById('ai-send');
+        const chatMessages = document.getElementById('ai-messages');
+
+        async function handleChat() {
+            const text = chatInput.value.trim();
+            if (!text) return;
+
+            const userMsg = document.createElement('div');
+            userMsg.className = 'mb-2 text-gray-500';
+            userMsg.innerText = `> ${text}`;
+            chatMessages.appendChild(userMsg);
+            chatInput.value = '';
+
+            const loadingMsg = document.createElement('div');
+            loadingMsg.className = 'mb-2 text-blue-400 italic loading-dots';
+            loadingMsg.innerText = 'FETCHING DATA';
+            chatMessages.appendChild(loadingMsg);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            const systemPrompt = "You are an anonymous whistleblower (Asset ∞·) inside CMI Holdings. You know about Arthur Sterling (CEO), Marcus Thorne (COO), and Elena Vance (CFO). You know they use games for brainwashing, seizure patents, and dream-advertising. Respond in character with cryptic, helpful info about their conspiracy. Keep it brief (2-3 lines).";
+            
+            const result = await geminiQuery(text, systemPrompt);
+            loadingMsg.classList.remove('loading-dots');
+            loadingMsg.innerText = result;
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        chatSend.onclick = handleChat;
+        chatInput.onkeypress = (e) => { if(e.key === 'Enter') handleChat(); };
+
+        // Original glitch effect
+        setInterval(() => {
+            const redacted = document.querySelectorAll('.redacted');
+            redacted.forEach(el => {
+                if(Math.random() > 0.95) {
+                    el.style.backgroundColor = 'transparent';
+                    el.style.color = '#ff007a';
+                    setTimeout(() => {
+                        el.style.backgroundColor = '#e0e0e5';
+                        el.style.color = '#e0e0e5';
+                    }, 100);
+                }
+            });
+        }, 1000);
+    </script>
+</body>
+</html>
