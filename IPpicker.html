@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mechanical IP Picker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --dial-bg: #1a1a1a;
+            --window-border: #333;
+            --text-color: #00ff41; /* Matrix/Retro green */
+            --item-height: 60px;
+        }
+
+        body {
+            background-color: #050505;
+            color: white;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .main-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+            transition: all 0.5s ease;
+        }
+
+        /* The "Window" that limits visibility */
+        .picker-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 20px;
+            background: #111;
+            border-radius: 12px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5), inset 0 0 10px rgba(0,255,65,0.1);
+            border: 1px solid var(--window-border);
+        }
+
+        .dot {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--window-border);
+            padding-bottom: 10px;
+        }
+
+        /* The hidden cylinder logic */
+        .window {
+            width: 80px;
+            height: var(--item-height);
+            background: var(--dial-bg);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden; 
+            cursor: ns-resize;
+            user-select: none;
+            box-shadow: inset 0 5px 15px rgba(0,0,0,0.8), inset 0 -5px 15px rgba(0,0,0,0.8);
+            border: 2px solid #222;
+        }
+
+        .window::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(
+                to bottom,
+                rgba(0,0,0,0.6) 0%,
+                transparent 20%,
+                transparent 80%,
+                rgba(0,0,0,0.6) 100%
+            );
+            pointer-events: none;
+        }
+
+        .cylinder {
+            position: absolute;
+            width: 100%;
+            will-change: transform;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .digit {
+            height: var(--item-height);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--text-color);
+            text-shadow: 0 0 10px rgba(0,255,65,0.5);
+        }
+
+        /* Button Styling */
+        .activate-btn {
+            background: transparent;
+            color: var(--text-color);
+            border: 1px solid var(--text-color);
+            padding: 12px 40px;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            border-radius: 4px;
+        }
+
+        .activate-btn:hover {
+            background: rgba(0, 255, 65, 0.1);
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.3);
+        }
+
+        .activate-btn:active {
+            transform: scale(0.95);
+        }
+
+        .activate-btn:disabled {
+            border-color: #333;
+            color: #333;
+            cursor: not-allowed;
+        }
+
+        /* Status UI */
+        .status-container {
+            display: none;
+            text-align: center;
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .success-text {
+            color: var(--text-color);
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .scanning-line {
+            height: 2px;
+            background: var(--text-color);
+            width: 0;
+            margin: 10px auto;
+            box-shadow: 0 0 10px var(--text-color);
+        }
+
+        .loading .scanning-line {
+            animation: scan 1.5s ease-in-out infinite;
+        }
+
+        @keyframes scan {
+            0% { width: 0; }
+            50% { width: 100%; }
+            100% { width: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-wrapper" id="app-container">
+        <div>
+            <div class="picker-container" id="ip-picker">
+                <div class="window" data-index="0"><div class="cylinder" id="cyl-0"></div></div>
+                <div class="dot">.</div>
+                <div class="window" data-index="1"><div class="cylinder" id="cyl-1"></div></div>
+                <div class="dot">.</div>
+                <div class="window" data-index="2"><div class="cylinder" id="cyl-2"></div></div>
+                <div class="dot">.</div>
+                <div class="window" data-index="3"><div class="cylinder" id="cyl-3"></div></div>
+            </div>
+            <div class="text-center mt-4 text-gray-500 text-xs tracking-widest uppercase">Manual IP Configuration</div>
+        </div>
+
+        <div id="controls" class="flex flex-col items-center gap-4">
+            <div id="output" class="text-gray-400 text-sm">Current Selection: 0.0.0.0</div>
+            <button id="activate-btn" class="activate-btn">Activate</button>
+        </div>
+
+        <div id="status-display" class="status-container">
+            <div id="status-title" class="success-text">INITIALIZING...</div>
+            <div class="scanning-line"></div>
+            <div id="status-msg" class="text-gray-400">Negotiating handshake with gateway</div>
+        </div>
+    </div>
+
+    <script>
+        const itemHeight = 60;
+        const maxVal = 255;
+        const segments = [0, 0, 0, 0];
+        const cylinders = document.querySelectorAll('.cylinder');
+        const windows = document.querySelectorAll('.window');
+        const outputDisplay = document.getElementById('output');
+        const activateBtn = document.getElementById('activate-btn');
+        const controls = document.getElementById('controls');
+        const statusDisplay = document.getElementById('status-display');
+        const pickerContainer = document.getElementById('ip-picker');
+
+        function init() {
+            cylinders.forEach((cyl, idx) => {
+                let html = '';
+                for (let set = 0; set < 3; set++) {
+                    for (let i = 0; i <= maxVal; i++) {
+                        html += `<div class="digit">${i}</div>`;
+                    }
+                }
+                cyl.innerHTML = html;
+                updatePosition(idx, false);
+            });
+        }
+
+        function updatePosition(index, animate = true) {
+            const cyl = document.getElementById(`cyl-${index}`);
+            const visualIndex = segments[index] + (maxVal + 1);
+            const offset = -visualIndex * itemHeight;
+            
+            cyl.style.transition = animate ? 'transform 0.2s cubic-bezier(0.1, 0.7, 0.3, 1)' : 'none';
+            cyl.style.transform = `translateY(${offset}px)`;
+            outputDisplay.innerText = `Current Selection: ${segments.join('.')}`;
+        }
+
+        function handleScroll(index, delta) {
+            let newVal = segments[index] + (delta > 0 ? 1 : -1);
+            if (newVal > maxVal) newVal = 0;
+            if (newVal < 0) newVal = maxVal;
+            segments[index] = newVal;
+            updatePosition(index);
+        }
+
+        // NAVIGATION LOGIC
+        activateBtn.addEventListener('click', () => {
+            const finalIP = segments.join('.');
+            activateBtn.disabled = true;
+            controls.style.opacity = '0.3';
+            pickerContainer.style.pointerEvents = 'none';
+            pickerContainer.style.filter = 'grayscale(1) opacity(0.5)';
+            statusDisplay.style.display = 'block';
+            statusDisplay.classList.add('loading');
+
+            setTimeout(() => {
+                document.getElementById('status-title').innerText = 'ROUTING...';
+                document.getElementById('status-msg').innerText = `Preparing redirect to ${finalIP}`;
+            }, 1000);
+
+            setTimeout(() => {
+                statusDisplay.classList.remove('loading');
+                document.getElementById('status-title').innerText = 'REDIRECTING';
+                document.getElementById('status-title').style.color = '#fff';
+                document.getElementById('status-msg').innerHTML = `Navigating to http://${finalIP}...`;
+                
+                // Attempt to open the IP address
+                // Note: Most browsers will block this if the IP doesn't have a valid web server.
+                setTimeout(() => {
+                    window.location.href = `http://${finalIP}`;
+                }, 1000);
+                
+                const resetLink = document.createElement('div');
+                resetLink.innerHTML = '<button class="mt-8 text-xs underline text-gray-600 hover:text-gray-400 cursor-pointer uppercase tracking-widest">Cancel Redirect</button>';
+                resetLink.onclick = () => location.reload();
+                statusDisplay.appendChild(resetLink);
+            }, 2500);
+        });
+
+        windows.forEach((win, index) => {
+            win.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                handleScroll(index, e.deltaY);
+            }, { passive: false });
+
+            let startY = 0;
+            let startVal = 0;
+
+            const onStart = (e) => {
+                startY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+                startVal = segments[index];
+                window.addEventListener('mousemove', onMove);
+                window.addEventListener('mouseup', onEnd);
+                window.addEventListener('touchmove', onMove, { passive: false });
+                window.addEventListener('touchend', onEnd);
+            };
+
+            const onMove = (e) => {
+                e.preventDefault();
+                const currentY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+                const diff = startY - currentY;
+                const step = Math.round(diff / 15);
+                let rawNewVal = startVal + step;
+                let wrappedVal = ((rawNewVal % (maxVal + 1)) + (maxVal + 1)) % (maxVal + 1);
+                
+                if (segments[index] !== wrappedVal) {
+                    segments[index] = wrappedVal;
+                    updatePosition(index);
+                }
+            };
+
+            const onEnd = () => {
+                window.removeEventListener('mousemove', onMove);
+                window.removeEventListener('mouseup', onEnd);
+                window.removeEventListener('touchmove', onMove);
+                window.removeEventListener('touchend', onEnd);
+            };
+
+            win.addEventListener('mousedown', onStart);
+            win.addEventListener('touchstart', onStart);
+        });
+
+        init();
+    </script>
+</body>
+</html>
