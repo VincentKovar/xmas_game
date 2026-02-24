@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Neo-Alethiometer Widget</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=IM+Fell+English+SC&display=swap');
+
+        :root {
+            --brass: #b5a642;
+            --gold: #ffd700;
+            --dark-brass: #5c511d;
+            --bg-dark: #0a0a0a;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #e0d5b0;
+            font-family: 'IM Fell English SC', serif;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        #device-frame {
+            position: relative;
+            width: 90vw;
+            height: 90vw;
+            max-width: 450px;
+            max-height: 450px;
+            margin: auto;
+            border-radius: 50%;
+            background: #111;
+            padding: 10px;
+            box-shadow: 0 0 40px rgba(0,0,0,1), 0 0 20px rgba(181, 166, 66, 0.3);
+            border: 4px solid var(--dark-brass);
+        }
+
+        #device-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle, #222 0%, #000 80%);
+            border: 2px solid var(--brass);
+            overflow: hidden;
+        }
+
+        .ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            border: 1px dashed rgba(181, 166, 66, 0.2);
+            pointer-events: none;
+        }
+
+        .symbol {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            user-select: none;
+            pointer-events: auto;
+            z-index: 30;
+            filter: grayscale(0.5);
+        }
+
+        .symbol:active {
+            transform: translate(-50%, -50%) scale(1.5);
+            filter: grayscale(0) drop-shadow(0 0 5px gold);
+        }
+
+        .symbol.selected {
+            filter: grayscale(0) drop-shadow(0 0 8px var(--gold));
+            font-size: 22px;
+        }
+
+        .hand {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-origin: bottom center;
+            border-radius: 10px;
+            transition: transform 1.2s cubic-bezier(0.19, 1, 0.22, 1);
+            pointer-events: none;
+        }
+
+        #hand-outer {
+            width: 3px;
+            height: 44%;
+            background: linear-gradient(to top, transparent, var(--gold));
+            bottom: 50%;
+            z-index: 10;
+        }
+
+        #hand-inner {
+            width: 3px;
+            height: 28%;
+            background: linear-gradient(to top, transparent, #ccc);
+            bottom: 50%;
+            z-index: 11;
+        }
+
+        #hand-truth {
+            width: 1.5px;
+            height: 38%;
+            background: #ff4444;
+            bottom: 50%;
+            z-index: 12;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.8);
+        }
+
+        .center-pin {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle, var(--gold), var(--dark-brass));
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 50;
+            border: 1px solid black;
+        }
+
+        .label-display {
+            font-family: 'Cinzel', serif;
+            color: var(--gold);
+            text-shadow: 0 0 10px rgba(181, 166, 66, 0.5);
+        }
+
+        .seek-btn {
+            background: linear-gradient(135deg, var(--dark-brass), #222);
+            border: 1px solid var(--brass);
+            color: var(--gold);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+        }
+
+        .seek-btn:active {
+            transform: scale(0.95);
+            background: var(--gold);
+            color: black;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-between min-h-screen py-10 px-4">
+
+    <div class="text-center">
+        <h1 class="text-3xl font-bold tracking-[0.2em] text-[#b5a642]">ALETHIOMETER</h1>
+        <p class="text-[10px] tracking-[0.3em] uppercase opacity-50 mt-1">Instrumentum Veritatis</p>
+    </div>
+
+    <div id="device-frame">
+        <div id="device-container">
+            <div id="ring-outer" class="ring w-[88%] h-[88%]"></div>
+            <div id="ring-inner" class="ring w-[58%] h-[58%]"></div>
+            
+            <div id="hand-outer" class="hand"></div>
+            <div id="hand-inner" class="hand"></div>
+            <div id="hand-truth" class="hand"></div>
+            
+            <div class="center-pin"></div>
+        </div>
+    </div>
+
+    <div class="w-full max-w-xs text-center space-y-6">
+        <div id="current-label" class="label-display h-8 text-sm flex items-center justify-center">
+            TOUCH TO SET FIRST SYMBOL
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4">
+            <button onclick="seekTruth()" class="seek-btn py-3 rounded-sm text-xs font-bold shadow-lg">Seek Truth</button>
+            <button onclick="resetHands()" class="border border-gray-800 text-gray-500 py-3 rounded-sm text-xs uppercase tracking-widest">Reset</button>
+        </div>
+    </div>
+
+    <script>
+        const outerSymbols = ["🐓","😈","👗","🎩","🌂","🧜‍♀️","🪜","🍾","🛢️","🌳","🍈","🗡️","👒","💀","🍐","🚩","🪕","🎻","🦩","🐦","✋","🥾","🌙","🦜","🍷","👨🏾","❤️","🍉","🥁","🦐","🏹","🎻","🕷️","🪖"];
+        const innerSymbols = ["⭐","🍲","🌍","🏹","🌵","🦂","🌹","💀","🔔","🏺","🦌","☀️","👑","🛶","🌲","🐟","🌴","🪴","🪕","🐸"];
+        
+        let activeHand = 'outer'; // Logic: Start with outer, then inner
+
+        function createRing(containerId, symbols, radius) {
+            const container = document.getElementById(containerId);
+            const count = symbols.length;
+            symbols.forEach((symbol, i) => {
+                const angle = (i / count) * 2 * Math.PI - Math.PI / 2;
+                const x = 50 + radius * Math.cos(angle);
+                const y = 50 + radius * Math.sin(angle);
+                
+                const el = document.createElement('div');
+                el.className = 'symbol';
+                el.id = `sym-${containerId}-${i}`;
+                el.innerHTML = symbol;
+                el.style.left = `${x}%`;
+                el.style.top = `${y}%`;
+                el.style.transform = 'translate(-50%, -50%)';
+                
+                el.addEventListener('click', () => {
+                    const isOuter = containerId === 'ring-outer';
+                    
+                    // Visual feedback
+                    document.querySelectorAll('.symbol').forEach(s => s.classList.remove('selected'));
+                    el.classList.add('selected');
+                    
+                    // Movement logic
+                    if(activeHand === 'outer' && isOuter) {
+                        setHand('hand-outer', (i / count) * 360);
+                        activeHand = 'inner';
+                        updateLabel(`OUTER SET: ${symbol}. SELECT INNER...`);
+                    } else if(activeHand === 'inner' && !isOuter) {
+                        setHand('hand-inner', (i / count) * 360);
+                        activeHand = 'ready';
+                        updateLabel(`INNER SET: ${symbol}. SEEK TRUTH.`);
+                    } else if(activeHand === 'ready' || activeHand === 'inner') {
+                        // Allow correcting
+                        const hand = isOuter ? 'hand-outer' : 'hand-inner';
+                        setHand(hand, (i / count) * 360);
+                        updateLabel(`${isOuter ? 'OUTER' : 'INNER'} UPDATED: ${symbol}`);
+                    }
+                });
+                
+                container.appendChild(el);
+            });
+        }
+
+        function setHand(id, degrees) {
+            document.getElementById(id).style.transform = `rotate(${degrees}deg)`;
+        }
+
+        function updateLabel(text) {
+            const el = document.getElementById('current-label');
+            el.style.opacity = 0;
+            setTimeout(() => {
+                el.innerText = text;
+                el.style.opacity = 1;
+            }, 200);
+        }
+
+        function seekTruth() {
+            if (activeHand === 'outer') {
+                updateLabel("SET AT LEAST ONE SYMBOL FIRST");
+                return;
+            }
+
+            // Alethiometer "Thinking" animation
+            let rotations = 0;
+            const interval = setInterval(() => {
+                const jitter = Math.random() * 360;
+                setHand('hand-truth', jitter);
+                rotations++;
+                if (rotations > 15) {
+                    clearInterval(interval);
+                    const finalTruth = Math.floor(Math.random() * 360);
+                    setHand('hand-truth', finalTruth);
+                    updateLabel("THE TRUTH HAS BEEN SPOKEN");
+                }
+            }, 80);
+        }
+
+        function resetHands() {
+            setHand('hand-outer', 0);
+            setHand('hand-inner', 0);
+            setHand('hand-truth', 0);
+            activeHand = 'outer';
+            document.querySelectorAll('.symbol').forEach(s => s.classList.remove('selected'));
+            updateLabel("TOUCH TO SET FIRST SYMBOL");
+        }
+
+        window.onload = () => {
+            createRing('ring-outer', outerSymbols, 42);
+            createRing('ring-inner', innerSymbols, 25);
+        };
+    </script>
+</body>
+</html>
