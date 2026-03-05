@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Resistance Receiver</title>
+    <style>
+        body {
+            background-color: #0f0f0f;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            color: #444;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        /* The Round Signal Light */
+        #light {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background-color: #1a1a1a;
+            border: 4px solid #333;
+            box-shadow: inset 0 0 20px #000;
+            transition: background-color 0.05s;
+            margin-bottom: 60px;
+        }
+
+        /* Active Light State (Amber/Orange for 70s vibe) */
+        #light.active {
+            background-color: #ff9900;
+            box-shadow: 0 0 50px #ff9900, inset 0 0 10px #ffffff;
+        }
+
+        /* The Rectangular Corporate-Style Button */
+        #receiveBtn {
+            padding: 20px 60px;
+            font-size: 1.2rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            background-color: #222;
+            color: #888;
+            border: 2px solid #444;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        #receiveBtn:active {
+            background-color: #333;
+            color: #ff9900;
+            border-color: #ff9900;
+        }
+
+        #receiveBtn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="light"></div>
+    <button id="receiveBtn">Receive</button>
+
+    <script>
+        const btn = document.getElementById('receiveBtn');
+        const light = document.getElementById('light');
+        
+        // Morse Code for "schumann"
+        // s(...) c(-.-.) h(....) u(..-) m(--) a(.-) n(-.) n(-.)
+        const morse = [
+            'dot', 'dot', 'dot', 'space',                    // s
+            'dash', 'dot', 'dash', 'dot', 'space',           // c
+            'dot', 'dot', 'dot', 'dot', 'space',             // h
+            'dot', 'dot', 'dash', 'space',                   // u
+            'dash', 'dash', 'space',                         // m
+            'dot', 'dash', 'space',                         // a
+            'dash', 'dot', 'space',                         // n
+            'dash', 'dot'                                    // n
+        ];
+
+        const DOT_TIME = 100;
+        const DASH_TIME = 300;
+        const INTRA_GAP = 100; // Gap between dots/dashes
+        const WORD_GAP = 2000; // 2 seconds between repetitions
+
+        let audioCtx = null;
+
+        async function playSignal(type) {
+            if (type === 'space') {
+                await new Promise(r => setTimeout(r, 300));
+                return;
+            }
+
+            const duration = type === 'dot' ? DOT_TIME : DASH_TIME;
+
+            // 1. Visual Light
+            light.classList.add('active');
+
+            // 2. Haptic Vibration
+            if (navigator.vibrate) navigator.vibrate(duration);
+
+            // 3. Audio Tone (880Hz for a sharp "70s tech" beep)
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+
+            // Hold signal
+            await new Promise(r => setTimeout(r, duration));
+
+            // End signal
+            light.classList.remove('active');
+            osc.stop();
+            
+            // Short silence between pulses
+            await new Promise(r => setTimeout(r, INTRA_GAP));
+        }
+
+        async function startSequence() {
+            // Initialize Audio on first click
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            
+            btn.disabled = true;
+            btn.innerText = "Transmitting...";
+
+            for (let i = 0; i < 3; i++) {
+                for (const bit of morse) {
+                    await playSignal(bit);
+                }
+                if (i < 2) await new Promise(r => setTimeout(r, WORD_GAP));
+            }
+
+            btn.disabled = false;
+            btn.innerText = "Receive";
+        }
+
+        btn.addEventListener('click', startSequence);
+    </script>
+</body>
+</html>
