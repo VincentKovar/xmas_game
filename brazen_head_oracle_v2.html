@@ -1515,18 +1515,39 @@
 
             c.toBlob(async blob => {
                 if (!blob) { toast("The card would not take its ink."); return; }
-                const file = new File([blob], 'brazen-head-fortune.png', { type: 'image/png' });
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    try { await navigator.share({ files: [file], title: 'The Brazen Head Speaks' }); return; }
-                    catch (e) { if (e.name === 'AbortError') return; }
-                }
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = 'brazen-head-fortune.png';
-                document.body.appendChild(a); a.click(); a.remove();
-                setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-                toast("Fortune card saved to your downloads.");
+                showCardPreview(blob);
             }, 'image/png');
+        }
+
+        // Preview with explicit Download / Share buttons, so behaviour is identical in every browser
+        function showCardPreview(blob) {
+            const old = document.getElementById('cardModal');
+            if (old) old.remove();
+            const url = URL.createObjectURL(blob);
+            const file = new File([blob], 'brazen-head-fortune.png', { type: 'image/png' });
+            const canShare = !!(navigator.canShare && navigator.canShare({ files: [file] }));
+
+            const m = document.createElement('div');
+            m.id = 'cardModal';
+            m.className = 'fixed inset-0 z-[60] bg-black/85 flex flex-col items-center justify-center gap-3 p-4';
+            m.innerHTML = `
+                <img src="${url}" alt="Your fortune card" class="max-h-[78vh] max-w-full rounded border-2 border-amber-700 shadow-2xl">
+                <div class="flex flex-wrap justify-center gap-2 font-cinzel text-xs font-bold tracking-wider">
+                    <a href="${url}" download="brazen-head-fortune.png" class="px-4 py-2 rounded border border-amber-500/70 bg-amber-900/70 text-amber-100 hover:bg-amber-800"><i class="fa-solid fa-download mr-1.5"></i>Download PNG</a>
+                    ${canShare ? '<button id="cardShare" class="px-4 py-2 rounded border border-amber-700/70 bg-slate-950 text-amber-300 hover:bg-amber-950/50"><i class="fa-solid fa-share-nodes mr-1.5"></i>Share</button>' : ''}
+                    <button id="cardClose" class="px-4 py-2 rounded border border-amber-800/70 bg-slate-950 text-amber-400 hover:bg-amber-950/50">Close</button>
+                </div>
+                <p class="text-[11px] text-amber-600">You can also right-click (or long-press) the card to save it.</p>`;
+            document.body.appendChild(m);
+
+            const close = () => { m.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000); };
+            m.querySelector('#cardClose').onclick = close;
+            m.addEventListener('click', e => { if (e.target === m) close(); });
+            const share = m.querySelector('#cardShare');
+            if (share) share.onclick = async () => {
+                try { await navigator.share({ files: [file], title: 'The Brazen Head Speaks' }); }
+                catch (e) { /* cancelled */ }
+            };
         }
 
         async function fetchGeminiOracle(userQuery, apiKey, yesNo) {
