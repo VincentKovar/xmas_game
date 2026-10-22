@@ -1480,13 +1480,23 @@
             ctx.fillText('The Brazen Head Speaks', W / 2, 200);
 
             // Snapshot of the head, rendered fresh so the canvas is readable
+            // Rendered at a fixed size and aspect, so the card looks the same on any screen
+            const dw = 900, dh = 620;
+            var textTop = 230 + dh + 40;
+            const container = document.getElementById('canvasContainer');
+            const prevRatio = renderer.getPixelRatio(), prevAspect = camera.aspect;
             try {
+                renderer.setPixelRatio(1);
+                renderer.setSize(dw, dh, false);
+                camera.aspect = dw / dh;
+                camera.updateProjectionMatrix();
                 renderer.render(scene, camera);
-                const src = renderer.domElement;
-                const dw = 900, dh = dw * (src.height / src.width);
-                ctx.drawImage(src, (W - dw) / 2, 230, dw, dh);
-                var textTop = 230 + dh + 40;
-            } catch (e) { var textTop = 280; }
+                ctx.drawImage(renderer.domElement, (W - dw) / 2, 230, dw, dh);
+            } catch (e) { /* card still carries the text without the snapshot */ }
+            renderer.setPixelRatio(prevRatio);
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            camera.aspect = prevAspect;
+            camera.updateProjectionMatrix();
 
             ctx.fillStyle = '#8f7a4a';
             ctx.font = "italic 30px 'MedievalSharp', serif";
